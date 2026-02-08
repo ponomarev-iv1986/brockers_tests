@@ -14,6 +14,7 @@ def account() -> AccountAPI:
 def mail() -> MailAPI:
     return MailAPI()
 
+
 @pytest.fixture(scope="session")
 def kafka_producer() -> Producer:
     with Producer() as producer:

@@ -16,3 +16,11 @@ class AccountAPI:
         response = self._client.post("/register/user/async-register", json=data)
         print(response.content)
         return response
+
+    def activate_user(self, token: str) -> httpx.Response:
+        params = {
+            "token": token,
+        }
+        response = self._client.put("register/user/activate", params=params)
+        print(response.content)
+        return response
