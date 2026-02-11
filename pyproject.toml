@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "brockers-tests"
+version = "0.1.0"
+description = ""
+authors = ["Иван Пономарев <panama.piv@yandex.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+httpx = "^0.28.1"
+pytest = "^9.0.2"
+kafka-python = "^2.3.0"
+
+
+[tool.poetry.group.lint.dependencies]
+black = "^26.1.0"
+isort = "^7.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
