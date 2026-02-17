@@ -11,6 +11,7 @@ from framework.helpers.kafka.consumers.register_events_errors import (
 from framework.internal.http.account import AccountAPI
 from framework.internal.http.mail import MailAPI
 from framework.internal.kafka.producer import Producer
+from framework.internal.rmq.publisher import RmqPublisher
 
 
 @pytest.fixture
@@ -21,6 +22,16 @@ def register_message() -> dict[str, str]:
         "login": login,
         "email": email,
         "password": "qwerty123",
+    }
+
+
+@pytest.fixture
+def rmq_message() -> dict[str, str]:
+    timestamp = str(datetime.datetime.now().timestamp())[:-4]
+    return {
+        "address": f"iponomarev_{timestamp}@mail.ru",
+        "subject": f"message_{timestamp}",
+        "body": f"message_{timestamp}",
     }
 
 
@@ -144,15 +155,22 @@ def test_register_events_errors_consumer_producer(
 
 
 def test_success_registration_with_kafka_producer_consumer(
-    register_events_subscriber: RegisterEventsSubscriber,
-    kafka_producer: Producer,
+    register_events_subscriber: RegisterEventsSubscriber, kafka_producer: Producer, register_message: dict[str, str]
 ) -> None:
-    login = f"iponomarev_{str(datetime.datetime.now().timestamp())[:-4]}"
-    email = f"{login}@mail.ru"
-    message = {
-        "login": login,
-        "email": email,
-        "password": "qwerty123",
-    }
-    kafka_producer.send("register-events", message)
-    register_events_subscriber.find_message(login=login, email=email)
+    kafka_producer.send("register-events", register_message)
+    register_events_subscriber.find_message(login=register_message["login"], email=register_message["email"])
+
+
+def test_rmq(
+    rmq_publisher: RmqPublisher,
+    mail: MailAPI,
+    rmq_message: dict[str, str],
+) -> None:
+    rmq_publisher.publish("dm.mail.sending", rmq_message)
+    for _ in range(10):
+        response = mail.find_message(query=rmq_message["body"])
+        if response.json()["total"] > 0:
+            break
+        time.sleep(1)
+    else:
+        raise AssertionError("Email not found")
