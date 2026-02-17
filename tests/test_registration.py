@@ -155,7 +155,9 @@ def test_register_events_errors_consumer_producer(
 
 
 def test_success_registration_with_kafka_producer_consumer(
-    register_events_subscriber: RegisterEventsSubscriber, kafka_producer: Producer, register_message: dict[str, str]
+    register_events_subscriber: RegisterEventsSubscriber,
+    kafka_producer: Producer,
+    register_message: dict[str, str],
 ) -> None:
     kafka_producer.send("register-events", register_message)
     register_events_subscriber.find_message(login=register_message["login"], email=register_message["email"])
