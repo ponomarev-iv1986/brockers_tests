@@ -1,3 +1,5 @@
+from typing import Generator
+
 import pytest
 
 from framework.helpers.kafka.consumers.register_events import RegisterEventsSubscriber
@@ -8,6 +10,7 @@ from framework.internal.http.account import AccountAPI
 from framework.internal.http.mail import MailAPI
 from framework.internal.kafka.consumer import Consumer
 from framework.internal.kafka.producer import Producer
+from framework.internal.rmq.publisher import RmqPublisher
 
 
 @pytest.fixture(scope="session")
@@ -21,7 +24,7 @@ def mail() -> MailAPI:
 
 
 @pytest.fixture(scope="session")
-def kafka_producer() -> Producer:
+def kafka_producer() -> Generator[Producer, None, None]:
     with Producer() as producer:
         yield producer
 
@@ -40,6 +43,12 @@ def register_events_errors_subscriber() -> RegisterEventsErrorsSubscriber:
 def kafka_consumer(
     register_events_subscriber: RegisterEventsSubscriber,
     register_events_errors_subscriber: RegisterEventsErrorsSubscriber,
-) -> Consumer:
+) -> Generator[Consumer, None, None]:
     with Consumer(subscribers=[register_events_subscriber, register_events_errors_subscriber]) as consumer:
         yield consumer
+
+
+@pytest.fixture(scope="session")
+def rmq_publisher() -> Generator[RmqPublisher, None, None]:
+    with RmqPublisher() as publisher:
+        yield publisher
