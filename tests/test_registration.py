@@ -8,6 +8,7 @@ from framework.helpers.kafka.consumers.register_events import RegisterEventsSubs
 from framework.helpers.kafka.consumers.register_events_errors import (
     RegisterEventsErrorsSubscriber,
 )
+from framework.helpers.rmq.consumers.dm_mail_sending import DmMailSending
 from framework.internal.http.account import AccountAPI
 from framework.internal.http.mail import MailAPI
 from framework.internal.kafka.producer import Producer
@@ -67,6 +68,7 @@ def test_failed_registration_with_kafka_producer_consumer(
 
 
 def test_success_registration(
+    rmq_dm_mail_sending_consumer: DmMailSending,
     register_events_subscriber: RegisterEventsSubscriber,
     account: AccountAPI,
     mail: MailAPI,
@@ -74,6 +76,7 @@ def test_success_registration(
 ) -> None:
     account.register_user(**register_message)
     register_events_subscriber.find_message(login=register_message["login"])
+    rmq_dm_mail_sending_consumer.find_message(login=register_message["login"])
     for _ in range(10):
         response = mail.find_message(query=register_message["login"])
         if response.json()["total"] > 0:
